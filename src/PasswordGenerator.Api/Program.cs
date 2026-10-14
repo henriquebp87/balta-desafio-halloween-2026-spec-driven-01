@@ -1,14 +1,13 @@
 using Microsoft.EntityFrameworkCore;
+using PasswordGenerator.Api;
 using PasswordGenerator.Infrastructure.Data;
 
-var builder = WebApplication.CreateBuilder(args);
+var app = ApiApplication.Build(args);
 
-var connectionString = builder.Configuration.GetConnectionString("PasswordDatabase")
-    ?? throw new InvalidOperationException("A string de conexão 'PasswordDatabase' não foi configurada.");
+await using (var scope = app.Services.CreateAsyncScope())
+{
+    var dbContext = scope.ServiceProvider.GetRequiredService<PasswordDbContext>();
+    await dbContext.Database.MigrateAsync();
+}
 
-builder.Services.AddDbContext<PasswordDbContext>(options =>
-    options.UseSqlite(connectionString));
-
-var app = builder.Build();
-
-app.Run();
+await app.RunAsync();
